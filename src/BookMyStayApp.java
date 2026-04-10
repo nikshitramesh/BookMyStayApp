@@ -1,5 +1,4 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 // Abstract Room Class
 abstract class Room {
@@ -69,46 +68,44 @@ class SuiteRoom extends Room {
     }
 }
 
-// NEW: Centralized Inventory Class
+// Centralized Inventory (same as Use Case 3)
 class RoomInventory {
     private HashMap<String, Integer> inventory;
 
-    // Constructor initializes inventory
     public RoomInventory() {
         inventory = new HashMap<>();
-
-        // Initial room availability
         inventory.put("Single Room", 5);
         inventory.put("Double Room", 3);
-        inventory.put("Suite Room", 2);
+        inventory.put("Suite Room", 0); // Example: unavailable
     }
 
-    // Get availability
+    // Read-only access
     public int getAvailability(String roomType) {
         return inventory.getOrDefault(roomType, 0);
     }
 
-    // Update availability (controlled)
-    public void updateAvailability(String roomType, int newCount) {
-        inventory.put(roomType, newCount);
+    // Expose full inventory (read-only usage expected)
+    public Map<String, Integer> getAllInventory() {
+        return inventory;
     }
+}
 
-    // Book a room (decrease count safely)
-    public boolean bookRoom(String roomType) {
-        int available = getAvailability(roomType);
+// NEW: Search Service (Read-Only)
+class RoomSearchService {
 
-        if (available > 0) {
-            inventory.put(roomType, available - 1);
-            return true;
-        }
-        return false;
-    }
+    public void searchAvailableRooms(List<Room> rooms, RoomInventory inventory) {
 
-    // Display all inventory
-    public void displayInventory() {
-        System.out.println("===== Current Room Inventory =====");
-        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
-            System.out.println(entry.getKey() + " उपलब्ध: " + entry.getValue());
+        System.out.println("===== Available Rooms =====\n");
+
+        for (Room room : rooms) {
+
+            int available = inventory.getAvailability(room.getRoomType());
+
+            // Validation: show only available rooms
+            if (available > 0) {
+                room.displayRoomDetails();
+                System.out.println("Available: " + available + "\n");
+            }
         }
     }
 }
@@ -118,39 +115,23 @@ public class BookMyStayApp {
 
     public static void main(String[] args) {
 
-        // Create Room Objects
-        Room single = new SingleRoom();
-        Room doubleRoom = new DoubleRoom();
-        Room suite = new SuiteRoom();
+        // Room objects (Domain Model)
+        List<Room> rooms = new ArrayList<>();
+        rooms.add(new SingleRoom());
+        rooms.add(new DoubleRoom());
+        rooms.add(new SuiteRoom());
 
-        // Initialize Inventory
+        // Inventory (State Holder)
         RoomInventory inventory = new RoomInventory();
+
+        // Search Service (Read-only)
+        RoomSearchService searchService = new RoomSearchService();
 
         System.out.println("===== Welcome to Book My Stay =====\n");
 
-        // Display Room Details + Availability
-        single.displayRoomDetails();
-        System.out.println("Available: " + inventory.getAvailability(single.getRoomType()) + "\n");
+        // Guest performs search
+        searchService.searchAvailableRooms(rooms, inventory);
 
-        doubleRoom.displayRoomDetails();
-        System.out.println("Available: " + inventory.getAvailability(doubleRoom.getRoomType()) + "\n");
-
-        suite.displayRoomDetails();
-        System.out.println("Available: " + inventory.getAvailability(suite.getRoomType()) + "\n");
-
-        // Simulate Booking
-        System.out.println("Booking a Single Room...");
-        if (inventory.bookRoom("Single Room")) {
-            System.out.println("Booking Successful!");
-        } else {
-            System.out.println("No rooms available!");
-        }
-
-        System.out.println();
-
-        // Display Updated Inventory
-        inventory.displayInventory();
-
-        System.out.println("\n===== Thank You! =====");
+        System.out.println("===== Search Completed (No Data Modified) =====");
     }
 }
