@@ -1,3 +1,7 @@
+import java.util.HashMap;
+import java.util.Map;
+
+// Abstract Room Class
 abstract class Room {
     private int beds;
     private double size;
@@ -9,7 +13,6 @@ abstract class Room {
         this.price = price;
     }
 
-    // Getters (Encapsulation)
     public int getBeds() {
         return beds;
     }
@@ -22,10 +25,8 @@ abstract class Room {
         return price;
     }
 
-    // Abstract method
     public abstract String getRoomType();
 
-    // Common method
     public void displayRoomDetails() {
         System.out.println("Room Type: " + getRoomType());
         System.out.println("Beds: " + beds);
@@ -34,7 +35,7 @@ abstract class Room {
     }
 }
 
-// Single Room Class
+// Concrete Room Classes
 class SingleRoom extends Room {
     public SingleRoom() {
         super(1, 200, 1500);
@@ -46,7 +47,6 @@ class SingleRoom extends Room {
     }
 }
 
-// Double Room Class
 class DoubleRoom extends Room {
     public DoubleRoom() {
         super(2, 350, 2500);
@@ -58,7 +58,6 @@ class DoubleRoom extends Room {
     }
 }
 
-// Suite Room Class
 class SuiteRoom extends Room {
     public SuiteRoom() {
         super(3, 600, 5000);
@@ -70,32 +69,88 @@ class SuiteRoom extends Room {
     }
 }
 
-// Main Class
+// NEW: Centralized Inventory Class
+class RoomInventory {
+    private HashMap<String, Integer> inventory;
+
+    // Constructor initializes inventory
+    public RoomInventory() {
+        inventory = new HashMap<>();
+
+        // Initial room availability
+        inventory.put("Single Room", 5);
+        inventory.put("Double Room", 3);
+        inventory.put("Suite Room", 2);
+    }
+
+    // Get availability
+    public int getAvailability(String roomType) {
+        return inventory.getOrDefault(roomType, 0);
+    }
+
+    // Update availability (controlled)
+    public void updateAvailability(String roomType, int newCount) {
+        inventory.put(roomType, newCount);
+    }
+
+    // Book a room (decrease count safely)
+    public boolean bookRoom(String roomType) {
+        int available = getAvailability(roomType);
+
+        if (available > 0) {
+            inventory.put(roomType, available - 1);
+            return true;
+        }
+        return false;
+    }
+
+    // Display all inventory
+    public void displayInventory() {
+        System.out.println("===== Current Room Inventory =====");
+        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
+            System.out.println(entry.getKey() + " उपलब्ध: " + entry.getValue());
+        }
+    }
+}
+
+// Main Application
 public class BookMyStayApp {
 
     public static void main(String[] args) {
 
-        // Creating room objects (Polymorphism)
+        // Create Room Objects
         Room single = new SingleRoom();
         Room doubleRoom = new DoubleRoom();
         Room suite = new SuiteRoom();
 
-        // Static availability
-        int singleAvailable = 5;
-        int doubleAvailable = 3;
-        int suiteAvailable = 2;
+        // Initialize Inventory
+        RoomInventory inventory = new RoomInventory();
 
         System.out.println("===== Welcome to Book My Stay =====\n");
 
+        // Display Room Details + Availability
         single.displayRoomDetails();
-        System.out.println("Available: " + singleAvailable + "\n");
+        System.out.println("Available: " + inventory.getAvailability(single.getRoomType()) + "\n");
 
         doubleRoom.displayRoomDetails();
-        System.out.println("Available: " + doubleAvailable + "\n");
+        System.out.println("Available: " + inventory.getAvailability(doubleRoom.getRoomType()) + "\n");
 
         suite.displayRoomDetails();
-        System.out.println("Available: " + suiteAvailable + "\n");
+        System.out.println("Available: " + inventory.getAvailability(suite.getRoomType()) + "\n");
 
-        System.out.println("===== Thank You! =====");
+        // Simulate Booking
+        System.out.println("Booking a Single Room...");
+        if (inventory.bookRoom("Single Room")) {
+            System.out.println("Booking Successful!");
+        } else {
+            System.out.println("No rooms available!");
+        }
+
+        System.out.println();
+
+        // Display Updated Inventory
+        inventory.displayInventory();
+
+        System.out.println("\n===== Thank You! =====");
     }
 }
